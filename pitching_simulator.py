@@ -307,7 +307,10 @@ class JuegoBeisbol:
             return self._manejar_lanzamiento_lejos()
 
         prob_swing = self.TASAS_SWING[tipo_bola][ubicacion]
-        prob_swing *= (self.bateador_actual.obp / 0.350)
+        if ubicacion == "zona":
+            prob_swing *= (self.bateador_actual.obp / 0.340)
+        elif ubicacion == "cerca":
+            prob_swing /= (self.bateador_actual.obp / 0.340)
         prob_swing = max(0.1, min(0.9, prob_swing))
         
         if random.random() < prob_swing:
