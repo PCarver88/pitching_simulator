@@ -165,7 +165,8 @@ class JuegoBeisbol:
         else:
             carreras = self.partido.avanzar_corredores('WILD_PITCH', 0)
             if carreras > 0:
-                resultado["detalles"] += f" {carreras} carrera(s) anotada(s)!"
+                texto = 'carrera anotada' if carreras == 1 else 'carreras anotadas!'
+                resultado["detalles"] += f" {carreras} {texto}!"
         return resultado
 
     def _manejar_lanzamiento_lejos(self):
@@ -203,7 +204,7 @@ class JuegoBeisbol:
                 self._siguiente_bateador()
             return resultado
         else:
-            porcentage = 0.14 if 'rapida' in tipo_bola else 0.24 # 14% de strikes en bola rapida y 24 en quebrada fuera
+            porcentage = 0.14 if 'rapida' in tipo_bola else 0.20 # 14% de strikes en bola rapida y 20 en quebrada fuera
             if random.random() < porcentage:  
                 self.partido.strikes += 1
                 resultado = {
