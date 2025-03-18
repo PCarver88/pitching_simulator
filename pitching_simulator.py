@@ -125,6 +125,8 @@ class Partido:
         
     def avanzar_out(self):
         self.outs += 1
+        if self.inning == 9 and self.outs == 3 and self.parte == 'Baja':
+            print(self.resultado)
         if self.outs >= 3:
             self.outs = 0
             self.hombres_en_base = [False, False, False]
@@ -141,8 +143,6 @@ class Partido:
                     self.parte = "Alta"
                     self.inning += 1
                     self.equipo_bateando = "Visitante"
-        if self.inning == 9:
-            print(self.resultado)
 
 class JuegoBeisbol:
     MODIFICADORES = {
@@ -152,8 +152,8 @@ class JuegoBeisbol:
     MOD_CALIDAD = {1:0.6, 2:0.8, 3:1.0, 4:1.2, 5:1.5}
     MOD_CALIDAD_OUT = {1:1.5, 2:1.2, 3:1.0, 4:0.8, 5:0.6}
     TASAS_SWING = {
-        "rapida": {"zona":0.9, "cerca":0.52, "lejos":0.01},
-        "quebrada": {"zona":0.75, "cerca":0.68, "lejos":0.05}
+        "rapida": {"zona":0.85, "cerca":0.40, "lejos":0.01},
+        "quebrada": {"zona":0.72, "cerca":0.52, "lejos":0.05}
     }
     TASAS_CONTACTO = {
         "rapida": {"zona":0.6, "cerca":0.40, "lejos":0.2},
@@ -260,7 +260,7 @@ class JuegoBeisbol:
                 self._siguiente_bateador()
             return resultado
         else:
-            porcentage = 0.14 if 'rapida' in tipo_bola else 0.20 # 14% de strikes en bola rapida y 20 en quebrada fuera
+            porcentage = 0.03 if 'rapida' in tipo_bola else 0.06 
             if random.random() < porcentage:  
                 self.partido.strikes += 1
                 resultado = {
@@ -350,10 +350,8 @@ class JuegoBeisbol:
             return self._manejar_lanzamiento_lejos()
 
         prob_swing = self.TASAS_SWING[tipo_bola][ubicacion]
-        if ubicacion == "zona":
-            prob_swing *= (self.bateador_actual.obp / 0.340)
-        elif ubicacion == "cerca":
-            prob_swing /= (self.bateador_actual.obp / 0.340)
+        if ubicacion == "cerca":
+            prob_swing /= (self.bateador_actual.obp / 0.350)
         prob_swing = max(0.1, min(0.9, prob_swing))
         
         if random.random() < prob_swing:
@@ -366,7 +364,7 @@ class JuegoBeisbol:
         mod_calidad = self.MOD_CALIDAD[calidad]
         #prob_hit_ini = calcular_porcentage(self.bateador_actual.avg)
         prob_hit = self.bateador_actual.avg * mod_tipo / mod_calidad
-        prob_hit *= 1.3
+        prob_hit *= 1.55
         
         if random.random() < prob_hit:
             return self._generar_hit()
@@ -383,9 +381,7 @@ class JuegoBeisbol:
             bases = 3
         else:
             bases = 4
-            
         carreras = self.partido.avanzar_corredores('HIT' if bases < 4 else 'HR', bases)
-
         self.partido.reset_cuenta()
         self._siguiente_bateador()
         if carreras == 4:
@@ -400,7 +396,7 @@ class JuegoBeisbol:
                 "cambio_cuenta": "0-0"}
         return resultado
 
-    def _generar_out(self, calidad, tipo_bola, ubicacion): # mejorar prob_contacto incluyendo calidad
+    def _generar_out(self, calidad, tipo_bola, ubicacion): 
         prob_contacto = self.TASAS_CONTACTO[tipo_bola][ubicacion]
         prob_contacto *= (self.bateador_actual.avg / 0.280)
         prob_contacto = prob_contacto * self.MOD_CALIDAD_OUT[calidad]
@@ -452,13 +448,14 @@ class JuegoBeisbol:
         total_pa = 0
         total_hr = 0
         bolas = 0
+        fly = 0
         for _ in range(num_juegos):
-            self.partido = Partido("Dodgers", "Oklands", "partido_2p")
+            self.partido = Partido("Oklands", "Dodgers", "partido_2p")
             while self.partido.inning <= 9:
                 resultado = self.lanzar(
                     calidad=3,
-                    tipo_bola=random.choice(["rapida", "quebrada"]),
-                    ubicacion=random.choices(["zona", "cerca", "lejos", "hit_batter", "wild"], weights=[0.65,0.20,0.07,0.03,0.05])[0]
+                    tipo_bola=random.choices(["rapida", "quebrada"], weights=[0.64,0.36])[0],
+                    ubicacion=random.choices(["zona", "cerca", "lejos", "hit_batter", "wild"], weights=[0.55, 0.20, 0.15, 0.05, 0.05] )[0]
                 )
                 if "HIT" in resultado["accion"] or "GRAN_SLAM" == resultado["accion"]:
                     total_hits += 1
@@ -466,11 +463,16 @@ class JuegoBeisbol:
                 total_hr += 1 if resultado["accion"] == "GRAN_SLAM" else 0
                 bolas += 1 if resultado["accion"] == "BASE_POR_BOLAS" else 0
                 bolas += 1 if resultado["accion"] == "HBP" else 0
+                fly += 1 if 'Elevado de sacrificio!' in resultado['detalles'] else 0
         total = total_pa - bolas
-        print('Bolas: ', bolas)
+        total_obp = (bolas + total_hits + fly) / total_pa
+        print('\nPartidos: ', num_juegos)
         print('Apariciones: ', total_pa)
         print('Hits: ', total_hits)
-        print(f"AVG simulado: {total_hits/total:.3f} y un total de {total_hr} Home runs en {num_juegos} partidos.")
+        print('Home runs: ', total_hr)
+        print('Base por Bolas: ', bolas)
+        print(f"AVG: {total_hits/total:.3f}.")
+        print(f"OBP {total_obp:.3f}.")
 
 def main():
     print("¡Bienvenido al Simulador de Pitcheo de Béisbol!")
