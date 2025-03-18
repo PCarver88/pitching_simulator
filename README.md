@@ -13,9 +13,9 @@ Simulador de Pitcheo
 
 4) Aumentar datos de jugadores, strikes out, para mejorar la lógica de estos, stolen bases, para que los jugadores intenten robar bases, fortalezas y debilidades aprovechando la mejora de las zonas.
 
-5) Meter más equipos. (solo hay 2)
+5) Mejorar el tipo de bola, cambiar quebrada por nombre real
 
-6) Mejorar el tipo de bola, cambiar quebrada por nombre real
+6) Meter más equipos. (solo hay 2)
 
 # Extras a largo plazo
 
