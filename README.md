@@ -11,13 +11,13 @@ Simulador de Pitcheo
 
 5) Mejorar UI/UX del juego.
 
-6) Preparar conteo para datos del pitcher.
+6) Preparar conteo para datos del jugador por partida. (Nº de Lanzamientos, control, % de bolas...)
 
 
 # Aquí termina la Beta y sería una primera versión jugable
 
 
-7) Crear el modo SITUACIONES de partido
+7) Crear el modo SITUACIONES de partido. (Juaga de setup, closer, stopper specialist, SP, MR, LR o Opener)
 
 8) Mejorar las zonas de la bola (Indicar mejor donde dió, interior, arriba...etc)
 
@@ -25,17 +25,21 @@ Simulador de Pitcheo
 
 10) Mejorar el tipo de bola, cambiar quebrada por nombre real
 
-11) Meter más equipos. (solo hay 2)
+11) Preparar historico de datos del jugador.
+
+12) Meter más equipos. (solo hay 2)
+
+13) Crear dificultades facil, dificil y muy dificil y menú ajustes
 
 
 # Extras a largo plazo
 
 
-12) Crear el juego con posibilidad para 2 jugadores.
+14) Crear el juego con posibilidad para 2 jugadores.
 
-13) Meterle voz y escucha al juego para jugarlo hablando.
+15) Meterle voz y escucha al juego para jugarlo hablando.
 
-14) Introducir el modo Bateador.
+16) Introducir el modo Bateador.
 
 
 
