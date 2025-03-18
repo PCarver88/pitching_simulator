@@ -316,14 +316,21 @@ class JuegoBeisbol:
         else:
             bases = 4
             
-        carreras = self.partido.avanzar_corredores('HIT' if bases <4 else 'HR', bases)
+        carreras = self.partido.avanzar_corredores('HIT' if bases < 4 else 'HR', bases)
+
         self.partido.reset_cuenta()
         self._siguiente_bateador()
-        return {
-            "accion": f"HIT_{bases}",
-            "detalles": f"{self.bateador_actual.nombre} conecta un hit de {bases} base{'s' if bases>1 else ''}!",
-            "cambio_cuenta": "0-0"
-        }
+        if carreras == 4:
+            resultado = {
+            "accion": "GRAN_SLAM",
+            "detalles": f"{self.bateador_actual.nombre} conecta un GRAN SLAM!!!!!",
+            "cambio_cuenta": "0-0"}
+        else:
+            resultado = {
+                "accion": f"HIT_{bases}",
+                "detalles": f"{self.bateador_actual.nombre} conecta un hit de {bases} base{'s' if bases>1 else ''}!",
+                "cambio_cuenta": "0-0"}
+        return resultado
 
     def _generar_out(self, calidad, tipo_bola, ubicacion):
         prob_contacto = self.TASAS_CONTACTO[tipo_bola][ubicacion]
@@ -450,7 +457,7 @@ def main():
             print(resultado["detalles"])
             print(f"Cuenta actual: {resultado['cambio_cuenta']}")
             
-            if resultado["accion"] in ["PONCHE", "OUT", "FLY_OUT", "GROUND_OUT", "HIT_1", "HIT_2", "HIT_3", "HIT_4", "BASE_POR_BOLAS", "HBP"]:
+            if resultado["accion"] in ["PONCHE", "OUT", "FLY_OUT", "GROUND_OUT", "HIT_1", "HIT_2", "HIT_3", "GRAN_SLAM", "BASE_POR_BOLAS", "HBP"]:
                 juego._siguiente_bateador()
         
         except ValueError:
