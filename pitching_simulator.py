@@ -146,18 +146,18 @@ class Partido:
 
 class JuegoBeisbol:
     MODIFICADORES = {
-        "rapida": {"zona": 1.3, "cerca": 0.9, "lejos": 0.5},
-        "quebrada": {"zona": 1.1, "cerca": 0.7, "lejos": 0.3}
+        "rapida": {"zona": 1.35, "cerca": 0.8, "lejos": 0.5},
+        "quebrada": {"zona": 1.22, "cerca": 0.6, "lejos": 0.3}
     }
     MOD_CALIDAD = {1:0.6, 2:0.8, 3:1.0, 4:1.2, 5:1.5}
     MOD_CALIDAD_OUT = {1:1.5, 2:1.2, 3:1.0, 4:0.8, 5:0.6}
     TASAS_SWING = {
-        "rapida": {"zona":0.85, "cerca":0.40, "lejos":0.01},
-        "quebrada": {"zona":0.72, "cerca":0.52, "lejos":0.05}
+        "rapida": {"zona":0.82, "cerca":0.34, "lejos":0.01},
+        "quebrada": {"zona":0.7, "cerca":0.62, "lejos":0.05}
     }
     TASAS_CONTACTO = {
-        "rapida": {"zona":0.6, "cerca":0.40, "lejos":0.2},
-        "quebrada": {"zona":0.5, "cerca":0.35, "lejos":0.1}
+        "rapida": {"zona":0.6, "cerca":0.45, "lejos":0.2},
+        "quebrada": {"zona":0.5, "cerca":0.3, "lejos":0.1}
     }
 
     def __init__(self, equipo_local='Vencejos', equipo_visitante="Dodgers"):
@@ -367,7 +367,7 @@ class JuegoBeisbol:
         mod_calidad = self.MOD_CALIDAD[calidad]
         #prob_hit_ini = calcular_porcentage(self.bateador_actual.avg)
         prob_hit = self.bateador_actual.avg * mod_tipo / mod_calidad
-        prob_hit *= 1.515
+        prob_hit *= 1.518
         
         if random.random() < prob_hit:
             return self._generar_hit()
