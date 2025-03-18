@@ -70,12 +70,12 @@ def avanzar_corredores(self, tipo_jugada, bases=0):
         return carreras
 
 
-# He calculado que el numero de bolas que recibe cada bateador cuando va al plato es entre 2.3 y 2.7 bolas
+
 def calcular_porcentage(average):
     percent = average * 100
     if not (0 <= percent <= 100):
         raise ValueError("El porcentaje debe estar entre 0 y 100.")
-    num_tiradas = round(random.uniform(2.3, 2.7),3)
+    num_tiradas = random.uniform(2.35, 2.75) # He calculado que el numero de lanzamientos cada vez que acudes al plato sin contar bolas malas es de 2.55 bolas
     import math
     T = 100 * (1 - math.pow(1 - percent/100, 1/num_tiradas))
-    return T/100
+    return round(T/100, 3)
