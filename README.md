@@ -3,9 +3,9 @@ Simulador de Pitcheo
 
 #Road Map
 
-1) Hacer test para ver resultados y mejorarlos.
+1) Hacer test para ver resultados y mejorarlos. (Cambiar pesos para hit productivo usando calcular_porcentage(average, num_tiradas=3.9)).
 
-2) Simular el inning de mi equipo contando con el pítcher rival para el modo 1Player.
+2) Simular el inning de mi equipo contando con el pítcher rival para el modo partido de 1Player.
 
 4) Crear los modos pitcheo libre o partido.
 

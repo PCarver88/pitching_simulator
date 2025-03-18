@@ -1,5 +1,7 @@
 import random
 
+from .utils import calcular_porcentage
+
 class Jugador:
     def __init__(self, nombre, avg, obp, singles, dobles, triples, hr, pa, brazo):
         self.nombre = nombre
@@ -294,8 +296,8 @@ class JuegoBeisbol:
     def _evaluar_swing(self, calidad, tipo_bola, ubicacion):
         mod_tipo = self.MODIFICADORES[tipo_bola][ubicacion]
         mod_calidad = self.MOD_CALIDAD[calidad]
-        prob_hit = self.BASE_HIT_PROB * mod_tipo / mod_calidad
-        prob_hit *= (self.bateador_actual.avg / 0.300)
+        prob_hit_ini = calcular_porcentage(self.bateador_actual.avg)
+        prob_hit = prob_hit_ini * mod_tipo / mod_calidad
         prob_hit = max(0.05, min(0.35, prob_hit))
         
         if random.random() < prob_hit:
