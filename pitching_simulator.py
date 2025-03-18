@@ -1,6 +1,6 @@
 import random
 
-from .utils import calcular_porcentage, simular_equipo_local_atacando
+from utils import calcular_porcentage, simular_equipo_local_atacando
 
 class Jugador:
     def __init__(self, nombre, avg, obp, singles, dobles, triples, hr, pa, brazo):
@@ -149,7 +149,7 @@ class JuegoBeisbol:
 
         self.order_local = 0
         self.order_visitante = 0
-        self.bateador_actual = self.order_visitante
+        self.bateador_actual = self.jugadores_equipo_visitante[self.order_visitante]
         self.partido = Partido(equipo_local, equipo_visitante)
 
     def _manejar_hbp(self):
@@ -447,7 +447,7 @@ def main():
         print(f"Outs: {estado['outs']}")
         print(f"Cuenta: {estado['cuenta']}")
         print(f"Hombres en base: {', '.join([b for b in estado['hombres_en_base'] if b])}")
-        print(f"Resultado: {equipo_visitante} {estado['carreras']['Visitante']} - {equipo_local} {estado['carreras']['Local']}")
+        print(f"Resultado: {juego.partido.resultado}")
         print(f"Bateador actual: {estado['bateador_actual']} ({estado['stats_bateador']})")
         
         print("\nTu lanzamiento:")
