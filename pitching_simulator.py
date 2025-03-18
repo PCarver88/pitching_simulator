@@ -12,6 +12,7 @@ class Jugador:
         self.triples = triples
         self.hr = hr
         self.pa = pa
+        self.brazo = brazo
         
         self.bb_rate = (obp - avg) / (1 - avg) if avg < 1 else 0
         self.total_hits = singles + dobles + triples + hr
@@ -28,7 +29,7 @@ class Jugador:
             self.hr_rate = 0.08
 
 class Partido:
-    def __init__(self):
+    def __init__(self, equipo_local="Dodgers", equipo_visitante="Oklands"):
         self.reset_cuenta()
         self.outs = 0
         self.inning = 1
@@ -36,6 +37,9 @@ class Partido:
         self.hombres_en_base = [False, False, False]
         self.carreras = {"Visitante": 0, "Local": 0}
         self.equipo_bateando = "Visitante"
+        self.equipo_local = equipo_local
+        self.equipo_rival = equipo_visitante
+        self.resultado = {equipo_visitante: self.carreras['Visitante'], equipo_local: self.carreras['Local']}
         
     def reset_cuenta(self):
         self.strikes = 0
@@ -94,7 +98,6 @@ class Partido:
                 self.equipo_bateando = "Visitante"
 
 class JuegoBeisbol:
-    BASE_HIT_PROB = 0.108
     MODIFICADORES = {
         "rapida": {"zona": 1.3, "cerca": 0.9, "lejos": 0.5},
         "quebrada": {"zona": 1.1, "cerca": 0.7, "lejos": 0.3}
@@ -109,7 +112,7 @@ class JuegoBeisbol:
         "quebrada": {"zona":0.68, "cerca":0.35, "lejos":0.1}
     }
 
-    def __init__(self, equipo="Dodgers"):
+    def __init__(self, equipo_local='Vencejos', equipo_visitante="Dodgers"):
         self.jugadores = [
             Jugador("Shohei Ohtani", 0.307, 0.392, 70, 25, 5, 35, 550, 'L'),
             Jugador("Mookie Betts", 0.289, 0.370, 100, 28, 3, 24, 650, 'R'),
@@ -131,14 +134,14 @@ class JuegoBeisbol:
             Jugador("Jacob Wilson", 0.250, 0.320, 85, 20, 2, 8, 500, 'R')
         ]
 
-        if equipo == "Dodgers":
-            self.jugadores = self.jugadores[:9]
+        if equipo_visitante == "Dodgers":
+            self.jugadores_equipo_visitante = self.jugadores[:9]
         else:
-            self.jugadores = self.jugadores[9:]
+            self.jugadores_equipo_visitante = self.jugadores[9:]
 
         self.order = 0
         self.bateador_actual = self.jugadores[self.order]
-        self.partido = Partido()
+        self.partido = Partido(equipo_local, equipo_visitante)
 
     def _manejar_hbp(self):
         resultado = {
@@ -356,6 +359,7 @@ class JuegoBeisbol:
 
     def obtener_estado_partido(self):
         """Retorna un diccionario con el estado actual del partido"""
+        brazo = 'Diestro' if self.bateador_actual.brazo == 'R' else 'Zurdo'
         return {
             "inning": self.partido.inning,
             "parte": self.partido.parte,
@@ -364,9 +368,9 @@ class JuegoBeisbol:
             "hombres_en_base": ["1B" if self.partido.hombres_en_base[0] else "", 
                               "2B" if self.partido.hombres_en_base[1] else "", 
                               "3B" if self.partido.hombres_en_base[2] else ""],
-            "carreras": self.partido.carreras,
+            "resultado": self.partido.resultado,
             "bateador_actual": self.bateador_actual.nombre,
-            "stats_bateador": f"AVG: {self.bateador_actual.avg}, OBP: {self.bateador_actual.obp}, HR: {self.bateador_actual.hr}"
+            "stats_bateador": f"AVG: {self.bateador_actual.avg}, OBP: {self.bateador_actual.obp}, HR: {self.bateador_actual.hr}, Brazo: {brazo}"
         }
     
     
@@ -404,14 +408,15 @@ def main():
     opcion = input("Seleccione una opción (1/2): ")
     
     if opcion == "1":
-        equipo = "Dodgers"
+        equipo_visitante = "Dodgers"
     elif opcion == "2":
-        equipo = "Oklands"
+        equipo_visitante = "Oklands"
     else:
         print("Opción inválida. Jugando contra los Dodgers por defecto.")
-        equipo = "Dodgers"
+        equipo_visitante = "Dodgers"
+    equipo_local = input("Escriba el nombre de su equipo: ")
     
-    juego = JuegoBeisbol(equipo)
+    juego = JuegoBeisbol(equipo_local, equipo_visitante)
     print("\nJugadores disponibles:")
     juego.mostrar_jugadores()
     

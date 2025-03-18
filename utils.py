@@ -1,4 +1,7 @@
 # Traer aqui funciones auxiliares
+import random
+import math
+
 def avanzar_corredores(self, tipo_jugada, bases=0):
         """
         Avanza los corredores según el tipo de jugada especificada.
@@ -76,6 +79,5 @@ def calcular_porcentage(average):
     if not (0 <= percent <= 100):
         raise ValueError("El porcentaje debe estar entre 0 y 100.")
     num_tiradas = random.uniform(2.35, 2.75) # He calculado que el numero de lanzamientos cada vez que acudes al plato sin contar bolas malas es de 2.55 bolas
-    import math
     T = 100 * (1 - math.pow(1 - percent/100, 1/num_tiradas))
     return round(T/100, 3)
