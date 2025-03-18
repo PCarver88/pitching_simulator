@@ -41,49 +41,87 @@ class Partido:
         self.equipo_rival = equipo_visitante
         self.resultado = f"{equipo_visitante} {self.carreras['Visitante']} - {self.carreras['Local']} {equipo_local}"
         self.modo = modo
+        self.actualizar_resultado()
+
+    def actualizar_resultado(self):
+        self.resultado = f"{self.equipo_rival} {self.carreras['Visitante']} - {self.carreras['Local']} {self.equipo_local}"
+        
         
     def reset_cuenta(self):
         self.strikes = 0
         self.bolas = 0
 
     def avanzar_corredores(self, tipo_jugada, bases=0):
+        """
+        Avanza los corredores según el tipo de jugada especificada.
+        
+        Parámetros:
+        - tipo_jugada: str que indica el tipo de jugada ('hit', 'wild_pitch', 'walk', 'home_run').
+        - bases: int que indica el número de bases que avanza el bateador en caso de un hit o home run.
+        
+        Retorna:
+        - carreras: int que indica el número de carreras anotadas en la jugada.
+        """
         nuevas_bases = [False, False, False]
         carreras = 0
 
         if tipo_jugada == 'HR':
-            carreras = 1 + sum(self.hombres_en_base)
+            # El bateador anota
+            carreras += 1
+            # Todos los corredores en base anotan
+            for base in self.hombres_en_base:
+                if base:
+                    carreras += 1
+            # Las bases quedan vacías
             self.hombres_en_base = [False, False, False]
-            
+
         elif tipo_jugada == 'HIT' and 1 <= bases <= 3:
+            # Avanzar corredores en base según el número de bases del hit
             for i in range(2, -1, -1):
                 if self.hombres_en_base[i]:
-                    nueva_pos = i + bases
-                    if nueva_pos >= 3:
+                    nueva_posicion = i + bases
+                    if nueva_posicion >= 3:  # El corredor anota
                         carreras += 1
                     else:
-                        nuevas_bases[nueva_pos] = True
+                        nuevas_bases[nueva_posicion] = True
+            # Colocar al bateador en la base correspondiente
             nuevas_bases[bases - 1] = True
             self.hombres_en_base = nuevas_bases
-            
+
         elif tipo_jugada == 'WILD_PITCH':
-            for i in range(3):
+            # Todos los corredores en base avanzan una base
+            for i in range(2, -1, -1):
                 if self.hombres_en_base[i]:
-                    if i == 2:
+                    nueva_posicion = i + 1
+                    if nueva_posicion >= 3:  # El corredor anota
                         carreras += 1
                     else:
-                        nuevas_bases[i + 1] = True
+                        nuevas_bases[nueva_posicion] = True
+            # El bateador no avanza en un wild pitch
             self.hombres_en_base = nuevas_bases
-            
+
         elif tipo_jugada in ['WALK','HBP']:
-            nuevas_bases = [True] + self.hombres_en_base[:2]
-            for i in range(3, 0, -1):
-                if nuevas_bases[i]:
-                    nuevas_bases[i] = False
-                    carreras += 1
-            self.hombres_en_base = nuevas_bases[:3]
+            # Avanzar corredores solo si son forzados
+            if not self.hombres_en_base[0]:
+                # Primera base está libre, el bateador toma la primera base
+                nuevas_bases[0] = True
+            else:
+                # Primera base ocupada, forzar avance de corredores
+                for i in range(2, -1, -1):
+                    if self.hombres_en_base[i]:
+                        nueva_posicion = i + 1
+                        if nueva_posicion >= 3:  # El corredor anota
+                            carreras += 1
+                        else:
+                            nuevas_bases[nueva_posicion] = True
+                # El bateador toma la primera base
+                nuevas_bases[0] = True
+            self.hombres_en_base = nuevas_bases
 
         self.carreras[self.equipo_bateando] += carreras
+        self.actualizar_resultado()
         return carreras
+
         
     def avanzar_out(self):
         self.outs += 1
@@ -94,6 +132,7 @@ class Partido:
                 self.inning += 1
                 carreras = simular_equipo_local_atacando()
                 self.carreras['Local'] += carreras
+                self.actualizar_resultado()
             else:
                 if self.parte == "Alta":
                     self.parte = "Baja"
@@ -102,20 +141,23 @@ class Partido:
                     self.parte = "Alta"
                     self.inning += 1
                     self.equipo_bateando = "Visitante"
+        if self.inning == 9:
+            print(self.resultado)
 
 class JuegoBeisbol:
     MODIFICADORES = {
         "rapida": {"zona": 1.3, "cerca": 0.9, "lejos": 0.5},
         "quebrada": {"zona": 1.1, "cerca": 0.7, "lejos": 0.3}
     }
-    MOD_CALIDAD = {1:1.5, 2:1.2, 3:1.0, 4:0.8, 5:0.6}
+    MOD_CALIDAD = {1:0.6, 2:0.8, 3:1.0, 4:1.2, 5:1.5}
+    MOD_CALIDAD_OUT = {1:1.5, 2:1.2, 3:1.0, 4:0.8, 5:0.6}
     TASAS_SWING = {
-        "rapida": {"zona":0.75, "cerca":0.45, "lejos":0.01},
-        "quebrada": {"zona":0.60, "cerca":0.55, "lejos":0.05}
+        "rapida": {"zona":0.9, "cerca":0.52, "lejos":0.01},
+        "quebrada": {"zona":0.75, "cerca":0.68, "lejos":0.05}
     }
     TASAS_CONTACTO = {
-        "rapida": {"zona":0.85, "cerca":0.50, "lejos":0.2},
-        "quebrada": {"zona":0.68, "cerca":0.35, "lejos":0.1}
+        "rapida": {"zona":0.6, "cerca":0.40, "lejos":0.2},
+        "quebrada": {"zona":0.5, "cerca":0.35, "lejos":0.1}
     }
 
     def __init__(self, equipo_local='Vencejos', equipo_visitante="Dodgers"):
@@ -267,6 +309,7 @@ class JuegoBeisbol:
             if random.random() < 0.1 and self.partido.hombres_en_base[2]:
                 resultado["detalles"] = "Elevado de sacrificio! Carrera anotada!"
                 self.partido.carreras[self.partido.equipo_bateando] += 1
+                self.partido.actualizar_resultado()
             self.partido.avanzar_out()
             self.partido.reset_cuenta()
             self._siguiente_bateador()
@@ -321,9 +364,9 @@ class JuegoBeisbol:
     def _evaluar_swing(self, calidad, tipo_bola, ubicacion):
         mod_tipo = self.MODIFICADORES[tipo_bola][ubicacion]
         mod_calidad = self.MOD_CALIDAD[calidad]
-        prob_hit_ini = calcular_porcentage(self.bateador_actual.avg)
-        prob_hit = prob_hit_ini * mod_tipo / mod_calidad
-        prob_hit = max(0.05, min(0.35, prob_hit))
+        #prob_hit_ini = calcular_porcentage(self.bateador_actual.avg)
+        prob_hit = self.bateador_actual.avg * mod_tipo / mod_calidad
+        prob_hit *= 1.3
         
         if random.random() < prob_hit:
             return self._generar_hit()
@@ -360,7 +403,7 @@ class JuegoBeisbol:
     def _generar_out(self, calidad, tipo_bola, ubicacion): # mejorar prob_contacto incluyendo calidad
         prob_contacto = self.TASAS_CONTACTO[tipo_bola][ubicacion]
         prob_contacto *= (self.bateador_actual.avg / 0.280)
-        prob_contacto = prob_contacto * self.MOD_CALIDAD[calidad]
+        prob_contacto = prob_contacto * self.MOD_CALIDAD_OUT[calidad]
         
         if random.random() < prob_contacto:
             resultado = self._manejar_contacto_sin_hit()
@@ -404,21 +447,30 @@ class JuegoBeisbol:
             print(f"{i}: {jugador.nombre} - AVG: {jugador.avg}, OBP: {jugador.obp}, HR: {jugador.hr}, Brazo: {jugador.brazo}")
   
 
-    def simular_temporada(self, num_juegos=100):
+    def simular_temporada(self, num_juegos=144):
         total_hits = 0
         total_pa = 0
+        total_hr = 0
+        bolas = 0
         for _ in range(num_juegos):
-            self.partido = Partido()
+            self.partido = Partido("Dodgers", "Oklands", "partido_2p")
             while self.partido.inning <= 9:
                 resultado = self.lanzar(
-                    calidad=random.choices([1,2,3,4,5], weights=[0.05,0.2,0.55,0.2,0.1])[0],
+                    calidad=3,
                     tipo_bola=random.choice(["rapida", "quebrada"]),
-                    ubicacion=random.choices(["zona", "cerca", "lejos", "hit_batter", "wild"], weights=[0.55,0.25,0.09,0.04,0.07])[0]
+                    ubicacion=random.choices(["zona", "cerca", "lejos", "hit_batter", "wild"], weights=[0.65,0.20,0.07,0.03,0.05])[0]
                 )
-                if "HIT" in resultado["accion"]:
+                if "HIT" in resultado["accion"] or "GRAN_SLAM" == resultado["accion"]:
                     total_hits += 1
                 total_pa += 1
-        print(f"AVG simulado: {total_hits/total_pa:.3f}")
+                total_hr += 1 if resultado["accion"] == "GRAN_SLAM" else 0
+                bolas += 1 if resultado["accion"] == "BASE_POR_BOLAS" else 0
+                bolas += 1 if resultado["accion"] == "HBP" else 0
+        total = total_pa - bolas
+        print('Bolas: ', bolas)
+        print('Apariciones: ', total_pa)
+        print('Hits: ', total_hits)
+        print(f"AVG simulado: {total_hits/total:.3f} y un total de {total_hr} Home runs en {num_juegos} partidos.")
 
 def main():
     print("¡Bienvenido al Simulador de Pitcheo de Béisbol!")
@@ -438,8 +490,13 @@ def main():
         print("Opción inválida. Jugando contra los Dodgers por defecto.")
         equipo_visitante = "Dodgers"
     equipo_local = input("Escriba el nombre de su equipo: ")
-    
     juego = JuegoBeisbol(equipo_local, equipo_visitante)
+    
+    simular = input("Desea simular una temporada (0=No/1=Si): ")
+    if simular == "1":
+        juego.simular_temporada()
+        
+    
     print("\nJugadores Rivales:")
     juego.mostrar_jugadores_rival()
     

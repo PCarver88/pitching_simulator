@@ -83,3 +83,44 @@ def calcular_porcentage(average):
 
 def simular_equipo_local_atacando():
     return random.choices([0,1,2,3,4,5,6], weights=[0.50, 0.16, 0.12, 0.08, 0.07, 0.05,0.02])[0]
+
+
+
+    def avanzar_corredores_mal(self, tipo_jugada, bases=0):
+        nuevas_bases = [False, False, False]
+        carreras = 0
+
+        if tipo_jugada == 'HR':
+            carreras = 1 + sum(self.hombres_en_base)
+            self.hombres_en_base = [False, False, False]
+            
+        elif tipo_jugada == 'HIT' and 1 <= bases <= 3:
+            for i in range(2, -1, -1):
+                if self.hombres_en_base[i]:
+                    nueva_pos = i + bases
+                    if nueva_pos >= 3:
+                        carreras += 1
+                    else:
+                        nuevas_bases[nueva_pos] = True
+            nuevas_bases[bases - 1] = True
+            self.hombres_en_base = nuevas_bases
+            
+        elif tipo_jugada == 'WILD_PITCH':
+            for i in range(3):
+                if self.hombres_en_base[i]:
+                    if i == 2:
+                        carreras += 1
+                    else:
+                        nuevas_bases[i + 1] = True
+            self.hombres_en_base = nuevas_bases
+            
+        elif tipo_jugada in ['WALK','HBP']:
+            nuevas_bases = [True] + self.hombres_en_base[:2]
+            for i in range(3, 0, -1):
+                if nuevas_bases[i]:
+                    nuevas_bases[i] = False
+                    carreras += 1
+            self.hombres_en_base = nuevas_bases[:3]
+
+        self.carreras[self.equipo_bateando] += carreras
+        return carreras
