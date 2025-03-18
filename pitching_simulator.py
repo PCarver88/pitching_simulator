@@ -1,6 +1,6 @@
 import random
 
-from .utils import calcular_porcentage
+from .utils import calcular_porcentage, simular_equipo_local_atacando
 
 class Jugador:
     def __init__(self, nombre, avg, obp, singles, dobles, triples, hr, pa, brazo):
@@ -29,7 +29,7 @@ class Jugador:
             self.hr_rate = 0.08
 
 class Partido:
-    def __init__(self, equipo_local="Dodgers", equipo_visitante="Oklands"):
+    def __init__(self, equipo_local="Dodgers", equipo_visitante="Oklands", modo="partido_1p"):
         self.reset_cuenta()
         self.outs = 0
         self.inning = 1
@@ -40,6 +40,7 @@ class Partido:
         self.equipo_local = equipo_local
         self.equipo_rival = equipo_visitante
         self.resultado = {equipo_visitante: self.carreras['Visitante'], equipo_local: self.carreras['Local']}
+        self.modo = modo
         
     def reset_cuenta(self):
         self.strikes = 0
@@ -89,20 +90,25 @@ class Partido:
         if self.outs >= 3:
             self.outs = 0
             self.hombres_en_base = [False, False, False]
-            if self.parte == "Alta":
-                self.parte = "Baja"
-                self.equipo_bateando = "Local"
-            else:
-                self.parte = "Alta"
+            if self.modo == "partido_1p":
                 self.inning += 1
-                self.equipo_bateando = "Visitante"
+                carreras = simular_equipo_local_atacando()
+                self.carreras['Local'] += carreras
+            else:
+                if self.parte == "Alta":
+                    self.parte = "Baja"
+                    self.equipo_bateando = "Local"
+                else:
+                    self.parte = "Alta"
+                    self.inning += 1
+                    self.equipo_bateando = "Visitante"
 
 class JuegoBeisbol:
     MODIFICADORES = {
         "rapida": {"zona": 1.3, "cerca": 0.9, "lejos": 0.5},
         "quebrada": {"zona": 1.1, "cerca": 0.7, "lejos": 0.3}
     }
-    MOD_CALIDAD = {1:0.6, 2:0.8, 3:1.0, 4:1.2, 5:1.5}
+    MOD_CALIDAD = {1:1.5, 2:1.2, 3:1.0, 4:0.8, 5:0.6}
     TASAS_SWING = {
         "rapida": {"zona":0.75, "cerca":0.45, "lejos":0.01},
         "quebrada": {"zona":0.60, "cerca":0.55, "lejos":0.05}
@@ -119,8 +125,8 @@ class JuegoBeisbol:
             Jugador("Freddie Freeman", 0.341, 0.410, 85, 50, 0, 29, 600, 'L'),
             Jugador("Teoscar Hernández", 0.267, 0.316, 90, 25, 1, 33, 560, 'R'),
             Jugador("Max Muncy", 0.212, 0.333, 60, 20, 0, 36, 580, 'L'),
+            Jugador("Tommy Edman", 0.265, 0.324, 90, 20, 5, 13, 600, 'R'),
             Jugador("Michael Conforto", 0.238, 0.330, 70, 15, 0, 15, 400, 'L'),
-            Jugador("Tommy Edman", 0.265, 0.324, 90, 20, 5, 13, 600, 'A'),
             Jugador("Will Smith", 0.248, 0.330, 80, 20, 0, 20, 500, 'R'),
             Jugador("Chris Taylor", 0.240, 0.300, 85, 15, 5, 10, 450, 'L'),
             Jugador("Esteury Ruiz", 0.250, 0.310, 100, 15, 5, 5, 500, 'R'),
@@ -136,11 +142,14 @@ class JuegoBeisbol:
 
         if equipo_visitante == "Dodgers":
             self.jugadores_equipo_visitante = self.jugadores[:9]
+            self.jugadores_equipo_local = self.jugadores[9:]
         else:
             self.jugadores_equipo_visitante = self.jugadores[9:]
+            self.jugadores_equipo_local = self.jugadores[:9]
 
-        self.order = 0
-        self.bateador_actual = self.jugadores[self.order]
+        self.order_local = 0
+        self.order_visitante = 0
+        self.bateador_actual = self.order_visitante
         self.partido = Partido(equipo_local, equipo_visitante)
 
     def _manejar_hbp(self):
@@ -259,22 +268,32 @@ class JuegoBeisbol:
                 resultado["detalles"] = "Elevado de sacrificio! Carrera anotada!"
                 self.partido.carreras[self.partido.equipo_bateando] += 1
             self.partido.avanzar_out()
+            self.partido.reset_cuenta()
             self._siguiente_bateador()
             return resultado
         else:  # Ground out
             if random.random() < 0.3 and sum(self.partido.hombres_en_base) > 0:
                 resultado = {"accion": "DOBLE_PLAY", "detalles": "Doble play!", "cambio_cuenta": f"{self.partido.bolas}-{self.partido.strikes}"}
-                self.partido.avanzar_out()
-                self.partido.avanzar_out()
+                if self.partido.outs <= 1:
+                    self.partido.avanzar_out()
+                    self.partido.avanzar_out()
+                else:
+                    self.partido.avanzar_out()
+                self.partido.reset_cuenta()
             else:
                 resultado = {"accion": "GROUND_OUT", "detalles": "Rodado para out!", "cambio_cuenta": f"{self.partido.bolas}-{self.partido.strikes}"}
                 self.partido.avanzar_out()
+                self.partido.reset_cuenta()
             self._siguiente_bateador()
             return resultado
 
     def _siguiente_bateador(self):
-        self.order = (self.order + 1) % len(self.jugadores)
-        self.bateador_actual = self.jugadores[self.order]
+        if self.partido.equipo_bateando == 'Local':
+            self.order_local = (self.order_local + 1) % len(self.jugadores_equipo_local)
+            self.bateador_actual = self.jugadores_equipo_local[self.order_local]
+        else:
+            self.order_visitante = (self.order_visitante + 1) % len(self.jugadores_equipo_visitante)
+            self.bateador_actual = self.jugadores_equipo_visitante[self.order_visitante]
 
     def lanzar(self, calidad, tipo_bola, ubicacion, bateador=None):
         if bateador is not None:
@@ -335,9 +354,10 @@ class JuegoBeisbol:
                 "cambio_cuenta": "0-0"}
         return resultado
 
-    def _generar_out(self, calidad, tipo_bola, ubicacion):
+    def _generar_out(self, calidad, tipo_bola, ubicacion): # mejorar prob_contacto incluyendo calidad
         prob_contacto = self.TASAS_CONTACTO[tipo_bola][ubicacion]
-        prob_contacto *= (self.bateador_actual.avg / 0.300)
+        prob_contacto *= (self.bateador_actual.avg / 0.280)
+        prob_contacto = prob_contacto * self.MOD_CALIDAD[calidad]
         
         if random.random() < prob_contacto:
             resultado = self._manejar_contacto_sin_hit()
@@ -374,11 +394,11 @@ class JuegoBeisbol:
         }
     
     
-    def mostrar_jugadores(self):
+    def mostrar_jugadores_rival(self):
         """Muestra la lista de jugadores disponibles"""
-        for i, jugador in enumerate(self.jugadores):
+        for i, jugador in enumerate(self.jugadores_equipo_visitante):
             i+=1
-            print(f"{i}: {jugador.nombre} - AVG: {jugador.avg}, OBP: {jugador.obp}, HR: {jugador.hr}")
+            print(f"{i}: {jugador.nombre} - AVG: {jugador.avg}, OBP: {jugador.obp}, HR: {jugador.hr}, Brazo: {jugador.brazo}")
   
 
     def simular_temporada(self, num_juegos=100):
@@ -417,8 +437,8 @@ def main():
     equipo_local = input("Escriba el nombre de su equipo: ")
     
     juego = JuegoBeisbol(equipo_local, equipo_visitante)
-    print("\nJugadores disponibles:")
-    juego.mostrar_jugadores()
+    print("\nJugadores Rivales:")
+    juego.mostrar_jugadores_rival()
     
     while True:
         print("\n" + "="*50)
@@ -427,7 +447,7 @@ def main():
         print(f"Outs: {estado['outs']}")
         print(f"Cuenta: {estado['cuenta']}")
         print(f"Hombres en base: {', '.join([b for b in estado['hombres_en_base'] if b])}")
-        print(f"Carreras: Visitante {estado['carreras']['Visitante']} - Local {estado['carreras']['Local']}")
+        print(f"Resultado: {equipo_visitante} {estado['carreras']['Visitante']} - {equipo_local} {estado['carreras']['Local']}")
         print(f"Bateador actual: {estado['bateador_actual']} ({estado['stats_bateador']})")
         
         print("\nTu lanzamiento:")

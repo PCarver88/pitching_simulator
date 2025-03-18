@@ -76,8 +76,10 @@ def avanzar_corredores(self, tipo_jugada, bases=0):
 
 def calcular_porcentage(average):
     percent = average * 100
-    if not (0 <= percent <= 100):
-        raise ValueError("El porcentaje debe estar entre 0 y 100.")
-    num_tiradas = random.uniform(2.35, 2.75) # He calculado que el numero de lanzamientos cada vez que acudes al plato sin contar bolas malas es de 2.55 bolas
+    num_tiradas = random.uniform(2.35, 2.75) # He calculado que se lanzan 2.55 bolas por vez al plato restando bolas malas
     T = 100 * (1 - math.pow(1 - percent/100, 1/num_tiradas))
     return round(T/100, 3)
+
+
+def simular_equipo_local_atacando():
+    return random.choices([0,1,2,3,4,5,6], weights=[0.50, 0.16, 0.12, 0.08, 0.07, 0.05,0.02])[0]
