@@ -39,7 +39,7 @@ class Partido:
         self.equipo_bateando = "Visitante"
         self.equipo_local = equipo_local
         self.equipo_rival = equipo_visitante
-        self.resultado = {equipo_visitante: self.carreras['Visitante'], equipo_local: self.carreras['Local']}
+        self.resultado = f'{equipo_visitante} {self.carreras['Visitante']} - {self.carreras['Local']} {equipo_local}'
         self.modo = modo
         
     def reset_cuenta(self):
