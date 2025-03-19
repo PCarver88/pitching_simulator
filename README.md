@@ -39,7 +39,7 @@ Simulador de Pitcheo
 
 15) Meterle voz y escucha al juego para jugarlo hablando.
 
-16) Introducir el modo Bateador.
+16) Introducir el modo Bateador..
 
 
 
